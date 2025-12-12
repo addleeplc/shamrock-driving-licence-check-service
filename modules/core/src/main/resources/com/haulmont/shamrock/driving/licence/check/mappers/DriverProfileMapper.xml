@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+  ~ Haulmont Technology proprietary and confidential.
+  ~ Use is subject to license terms.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haulmont.shamrock.driving.licence.check.mappers">
+
+    <update id="updateDriverProfile">
+        UPDATE SL_DRIVERS
+        SET LICENSE_POINTS         = #{licencePoints},
+            LICENSE_INSPECTED_DATE = #{licenceInspectDate},
+            UPDATE_TS              = getDate(),
+            UPDATED_BY             = #{createdBy,javaType=java.lang.Long,jdbcType=BIGINT},
+            VERSION                = VERSION + 1
+        WHERE UUID = #{driverId,javaType=java.util.UUID,jdbcType=OTHER}
+
+        declare @DRIVER_PID numeric(19,0)
+
+        select @DRIVER_PID = (SELECT ID FROM SL_DRIVERS WHERE UUID = #{driverId,javaType=java.util.UUID,jdbcType=OTHER})
+
+
+        <foreach collection="convictions" item="conviction">
+            INSERT INTO SL_DRIVER_CONVICTIONS (
+                UUID,
+                IS_DELETED,
+                CREATE_TS,
+                CREATED_BY,
+                VERSION,
+                CONVICTION_DATE,
+                OFFENCE_CODE,
+                DRIVER_ID,
+                ORDER_INDEX,
+                SUSPENSION)
+
+            SELECT newid(1),
+                   0,
+                   getdate(),
+                   #{createdBy,javaType=java.lang.Long,jdbcType=BIGINT},
+                   0,
+                   #{conviction.convictionDate,javaType=org.joda.time.LocalDate,jdbcType=DATE},
+                   #{conviction.code,javaType=java.lang.String,jdbcType=VARCHAR},
+                   @DRIVER_PID,
+                   0,
+                   #{conviction.codeDescription,javaType=java.lang.String,jdbcType=VARCHAR}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM SL_DRIVER_CONVICTIONS
+                WHERE CONVICTION_DATE = #{conviction.convictionDate,javaType=org.joda.time.LocalDate,jdbcType=DATE} AND
+                      OFFENCE_CODE = #{conviction.code,javaType=java.lang.String,jdbcType=VARCHAR} AND
+                      DRIVER_ID = @DRIVER_PID
+            )
+        </foreach>
+    </update>
+
+</mapper>

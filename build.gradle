@@ -107,17 +107,20 @@ configure(core_module) {
             transitive = false
         }
 
-        compile(group: 'com.haulmont.monaco', name: 'monaco-core', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-config', version: "$monaco_version")
-
-        compile(group: 'com.haulmont.monaco', name: 'monaco-graylog-reporter', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-sentry-reporter', version: "$monaco_version")
-
-        compile(group: 'com.haulmont.monaco', name: 'monaco-mq', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-pico-test', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-redis', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
-        compile(group: 'com.haulmont.monaco', name: 'monaco-unirest', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-core', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-config', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-graylog-reporter', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-sentry-reporter', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-mq', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-pico-test', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-redis', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-unirest', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-ds', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-ds-sybase', version: "$monaco_version")
+        implementation group: 'com.haulmont.monaco', name: 'monaco-mybatis', version: "$monaco_version"
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-rabbit-mq', version: "$monaco_version")
+        implementation group: 'com.haulmont.monaco', name: 'monaco-scheduler', version: "$monaco_version"
     }
 
     task deploy(dependsOn: assemble, type: ShamrockDeployJettyTask) {
@@ -131,9 +134,9 @@ configure(rs_module) {
     dependencies {
         compile(core_module)
 
-        compile(group: 'com.haulmont.monaco', name: 'monaco-metrics-influxdb', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-metrics-influxdb', version: "$monaco_version")
 
-        compile(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
+        implementation(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
         extraLibs(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version") {
             transitive = false
         }

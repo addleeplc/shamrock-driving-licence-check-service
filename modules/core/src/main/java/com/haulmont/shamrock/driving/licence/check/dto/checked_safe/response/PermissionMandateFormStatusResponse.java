@@ -1,0 +1,21 @@
+/*
+ * Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+ * Haulmont Technology proprietary and confidential.
+ * Use is subject to license terms.
+ */
+
+package com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.PermissionMandateFormStatus;
+
+public class PermissionMandateFormStatusResponse extends CheckedSafeResponse {
+
+    @JsonProperty("permissionMandateFormStatus")
+    private PermissionMandateFormStatus permissionMandateFormStatus;
+
+    public PermissionMandateFormStatus getPermissionMandateFormStatus() {
+        return permissionMandateFormStatus;
+    }
+
+}

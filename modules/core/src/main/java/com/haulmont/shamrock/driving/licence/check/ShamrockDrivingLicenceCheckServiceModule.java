@@ -11,7 +11,12 @@ import com.haulmont.monaco.container.ModuleLoader;
                 "monaco-config",
                 "monaco-graylog-reporter",
                 "monaco-sentry-reporter",
-                "monaco-mq", "monaco-pico-test", "monaco-redis", "monaco-rs", "monaco-unirest"
+                "monaco-mq",
+                "monaco-pico-test",
+                "monaco-redis",
+                "monaco-rs",
+                "monaco-unirest",
+                "monaco-scheduler"
         }
 )
 public class ShamrockDrivingLicenceCheckServiceModule extends ModuleLoader {
