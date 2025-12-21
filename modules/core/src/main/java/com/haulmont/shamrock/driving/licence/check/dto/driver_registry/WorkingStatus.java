@@ -44,4 +44,8 @@ public class WorkingStatus {
     public int hashCode() {
         return Objects.hash(code, reason);
     }
+
+    public static WorkingStatus workingStatus(String code, String reason) {
+        return new WorkingStatus(code, reason);
+    }
 }

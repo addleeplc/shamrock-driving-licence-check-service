@@ -8,31 +8,29 @@ package com.haulmont.shamrock.driving.licence.check.service.command;
 
 import com.haulmont.monaco.mybatis.MyBatisCommand;
 import com.haulmont.monaco.mybatis.SqlSessionFactoryResource;
-import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.Conviction;
+import com.haulmont.shamrock.driving.licence.check.mq.dto.Conviction;
 import org.apache.ibatis.session.SqlSession;
 import org.joda.time.DateTime;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.haulmont.shamrock.driving.licence.check.mybatis.SqlSessionFactory.NS_PREFIX;
 import static java.util.Map.entry;
 
-public class UpdateDriverProfileCommand extends MyBatisCommand<Void> {
+public class PersistCheckResultCommand extends MyBatisCommand<Void> {
 
     private final Long shamrockUserId;
-    private final UUID driverId;
+    private final Long driverPid;
     private final Integer licencePoints;
-    private final DateTime licenceInspectDate;
+    private final DateTime licenceInspectionDate;
     private final List<Conviction> convictions;
 
-    public UpdateDriverProfileCommand(SqlSessionFactoryResource sqlSessionFactory, Long shamrockUserId, UUID driverId, Integer licencePoints, DateTime licenceInspectDate, List<Conviction> convictions) {
+    public PersistCheckResultCommand(SqlSessionFactoryResource sqlSessionFactory, Long shamrockUserId, Long driverPid, Integer licencePoints, DateTime licenceInspectionDate, List<Conviction> convictions) {
         super(sqlSessionFactory);
         this.shamrockUserId = shamrockUserId;
-        this.driverId = driverId;
+        this.driverPid = driverPid;
         this.licencePoints = licencePoints;
-        this.licenceInspectDate = licenceInspectDate;
+        this.licenceInspectionDate = licenceInspectionDate;
         this.convictions = convictions;
     }
 
@@ -41,8 +39,8 @@ public class UpdateDriverProfileCommand extends MyBatisCommand<Void> {
         sqlSession.update(NS_PREFIX + getName(),
                 Map.ofEntries(
                         entry("licencePoints", licencePoints),
-                        entry("licenceInspectDate", licenceInspectDate),
-                        entry("driverId", driverId),
+                        entry("licenceInspectionDate", licenceInspectionDate),
+                        entry("driverPid", driverPid),
                         entry("convictions", convictions),
                         entry("createdBy", shamrockUserId)
                 )
@@ -52,6 +50,6 @@ public class UpdateDriverProfileCommand extends MyBatisCommand<Void> {
 
     @Override
     protected String getName() {
-        return "updateDriverProfile";
+        return "updateDrivingLicence";
     }
 }

@@ -19,7 +19,7 @@ import java.util.UUID;
 public class LicenceCheck {
 
     @JsonProperty("licenceStatus")
-    private LicenceStatus licenceStatus;
+    private String licenceStatus;
     @JsonProperty("numberOfPoints")
     private Integer numberOfPoints;
     @JsonProperty("clientUserId")
@@ -41,7 +41,7 @@ public class LicenceCheck {
     @JsonProperty("convictions")
     private List<Conviction> convictions = new ArrayList<>();
 
-    public LicenceStatus getLicenceStatus() {
+    public String getLicenceStatus() {
         return licenceStatus;
     }
 
@@ -75,5 +75,11 @@ public class LicenceCheck {
 
     public List<Conviction> getConvictions() {
         return convictions;
+    }
+
+    public enum RiskScore {
+        HIGH,
+        MEDIUM,
+        LOW
     }
 }

@@ -10,33 +10,52 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.haulmont.bali.jackson.joda.LocalDateAdapter;
+import com.haulmont.monaco.jackson.annotations.SensitiveData;
 import org.joda.time.LocalDate;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Driver {
+    @JsonProperty("pid")
+    private Long pid;
 
     @JsonProperty("id")
     private UUID id;
     @JsonProperty("callsign")
     private String callsign;
     @JsonProperty("first_name")
+    @SensitiveData
     private String firstName;
     @JsonProperty("last_name")
+    @SensitiveData
     private String lastName;
+    @JsonProperty("middle_name")
+    @SensitiveData
+    private String middleName;
     @JsonProperty("full_name")
+    @SensitiveData
     private String fullName;
     @JsonProperty("date_of_birth")
     @JsonSerialize(using = LocalDateAdapter.Serializer.class)
     @JsonDeserialize(using = LocalDateAdapter.Deserializer.class)
     private LocalDate dateOfBirth;
     @JsonProperty("driving_licence")
+    @SensitiveData
     private String drivingLicence;
     @JsonProperty("home_address")
     private HomeAddress homeAddress;
     @JsonProperty("working_status")
     private WorkingStatus status;
+
+    public Long getPid() {
+        return pid;
+    }
+
+    public void setPid(Long pid) {
+        this.pid = pid;
+    }
 
     public UUID getId() {
         return id;
@@ -60,6 +79,14 @@ public class Driver {
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
+    }
+
+    public String getMiddleName() {
+        return middleName;
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
 
     public String getLastName() {

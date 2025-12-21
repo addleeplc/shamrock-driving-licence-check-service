@@ -8,12 +8,12 @@ package com.haulmont.shamrock.driving.licence.check.resource;
 
 import com.haulmont.monaco.response.ErrorCode;
 import com.haulmont.monaco.response.Response;
+import com.haulmont.shamrock.driving.licence.check.LicenceCheckService;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.TokenRequest;
-import com.haulmont.shamrock.driving.licence.check.service.DriverProfileService;
+import com.haulmont.shamrock.driving.licence.check.dto.request.checked_safe.CheckedSafeWebhookEventRequest;
+import com.haulmont.shamrock.driving.licence.check.DrivingLicenceRepository;
 import com.haulmont.shamrock.driving.licence.check.ServiceConfiguration;
-import com.haulmont.shamrock.driving.licence.check.dto.WebhookData;
 import com.haulmont.shamrock.driving.licence.check.service.EmailService;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,8 @@ import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
 import static com.haulmont.shamrock.driving.licence.check.dto.EventType.CHECK_COMPLETE;
-import static com.haulmont.shamrock.driving.licence.check.dto.checked_safe.ResponseStatus.SUCCESS;
+import static com.haulmont.shamrock.driving.licence.check.dto.checked_safe.StatusCode.SUCCESS;
+import static com.haulmont.shamrock.driving.licence.check.utils.EventConverter.convert;
 
 @Path("v1/checkedsafe/webhooks/event")
 @Produces({MediaType.APPLICATION_JSON})
@@ -34,32 +35,33 @@ public class WebhookResource {
     @Inject
     private ServiceConfiguration serviceConfiguration;
     @Inject
-    private DriverProfileService driverProfileService;
+    private DrivingLicenceRepository driverProfileService;
     @Inject
     private EmailService emailService;
+    @Inject
+    private LicenceCheckService licenceCheckService;
 
     /**
      * @see TokenRequest#checkEvents
      */
     @POST
-    public Response handleWebhook(@HeaderParam("x-callback-token") String callbackToken, @RequestBody WebhookData event) {
-        if (!Objects.equals(callbackToken, serviceConfiguration.getCheckedSafeCallbackToken())) {
-            return new Response(ErrorCode.UNAUTHORIZED.getCode(), "x-callback-token header is required");
-        }
+    public Response handleWebhook(CheckedSafeWebhookEventRequest request) {
+        if (request.getEventType().equals(CHECK_COMPLETE)) {
+            if (request.getStatus().equals(SUCCESS)) {
+                log.info("Received successful LicenceCheckCompleted request for Driver({})", request.getLicenceCheck().getClientUserId());
 
-        if (event.getEvent().equals(CHECK_COMPLETE)) {
-            if (event.getStatus().equals(SUCCESS)) {
-                log.info("Received webhook check complete for Driver({})", event.getLicenceCheck().getClientUserId());
-                driverProfileService.updateProfile(event.getLicenceCheck());
+                licenceCheckService.handleLicenceCheck(request.getLicenceCheck());
             } else {
-                log.info("Received webhook check not complete: {}", event.getError().getMessage());
-                emailService.sendDeclinedCheckMail(event.getError().getMessage());
+                log.info("Received failed LicenceCheckCompleted request: {}", request.getError().getMessage());
+                //todo driverId, awaiting response from checkedsafe
+                licenceCheckService.handleLicenceCheckError(request.getDriverId(), request.getError());
             }
+
+            return new Response(ErrorCode.OK);
         } else {
-            log.info("{} not supported", event.getEvent());
+            log.info("Received request type: {} is not supported", request.getEventType());
+
+            return new Response(ErrorCode.BAD_REQUEST.getCode(), "Request type is not supported");
         }
-
-        return new Response(ErrorCode.OK);
     }
-
 }

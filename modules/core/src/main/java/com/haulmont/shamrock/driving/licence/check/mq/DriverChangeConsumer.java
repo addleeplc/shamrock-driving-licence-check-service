@@ -10,7 +10,7 @@ import com.haulmont.monaco.mq.annotations.Subscribe;
 import com.haulmont.monaco.rabbit.mq.annotations.Consumer;
 import com.haulmont.shamrock.driving.licence.check.ServiceConfiguration;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.ClientStatus;
-import com.haulmont.shamrock.driving.licence.check.service.LicenceCheckService;
+import com.haulmont.shamrock.driving.licence.check.LicenceCheckService;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;

@@ -11,6 +11,7 @@ import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.Toke
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.UpdateUserStatusRequest;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.MandateFormResponse;
 import com.haulmont.shamrock.driving.licence.check.service.command.chacked_safe.*;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
@@ -42,7 +43,7 @@ public class CheckedSafeService {
                 )
         ).execute();
 
-        if (res.getStatus().equals(ResponseStatus.SUCCESS)) {
+        if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return new Token(res.getApiToken().getToken(), res.getApiToken().getValidUntil());
         } else {
             log.error("Failed to obtain checked safe api token: {}", res.getError().getMessage());
@@ -65,13 +66,11 @@ public class CheckedSafeService {
                 getToken(),
                 new MandateFormRequest(
                         driver.getDrivingLicence(),
-                        Optional.of(driver)
-                                .map(Driver::getFullName)
-                                .orElse(driver.getFirstName() + " " +  driver.getLastName()),
+                        formatName(driver),
                         driver.getDateOfBirth(),
                         Optional.of(driver)
                                 .map(Driver::getHomeAddress)
-                                .map(HomeAddress::getFormattedAddress)
+                                .map(this::cropPostalCode)
                                 .orElse(null),
                         Optional.of(driver)
                                 .map(Driver::getHomeAddress)
@@ -90,7 +89,7 @@ public class CheckedSafeService {
                 )
         ));
 
-        if (res.getStatus().equals(ResponseStatus.SUCCESS)) {
+        if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getPermissionMandateRequest();
         } else if (res.getError().getMessage().equals("User with same clientUserId but different name or surname found")) {
           throw new ServiceException(ErrorCode.BAD_REQUEST, "User with same driver id but different name or surname found");
@@ -109,7 +108,7 @@ public class CheckedSafeService {
                 )
         ));
 
-        if (res.getError() != null && !isClientUserIdNotFound(res.getError()) && res.getStatus().equals(ResponseStatus.FAIL)) {
+        if (res.getError() != null && !isClientUserIdNotFound(res.getError()) && res.getStatus().equals(StatusCode.FAIL)) {
             log.error("Failed to update user status for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
@@ -118,7 +117,7 @@ public class CheckedSafeService {
     public LicencePermissionMandate getCompleteMandate(UUID driverId) {
         var res = call(new GetCompleteMandateCommand(getToken(), driverId));
 
-        if (res.getStatus().equals(ResponseStatus.SUCCESS)) {
+        if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getLicencePermissionMandateId();
         } else if (isClientUserIdNotFound(res.getError())) {
             return null;
@@ -131,7 +130,7 @@ public class CheckedSafeService {
     public PermissionMandateFormStatus getMandateFormStatus(UUID driverId) {
         var res = call(new RequestPermissionMandateFormStatusCommand(getToken(), driverId));
 
-        if (res.getStatus().equals(ResponseStatus.SUCCESS)) {
+        if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getPermissionMandateFormStatus();
         } else if (isClientUserIdNotFound(res.getError())) {
             return null;
@@ -144,7 +143,7 @@ public class CheckedSafeService {
     public void triggerAdHocCheck(UUID driverId) {
         var res = call(new TriggerAdHocCheckCommand(getToken(), driverId));
 
-        if (!isClientUserIdNotFound(res.getError()) && res.getStatus().equals(ResponseStatus.FAIL)) {
+        if (!isClientUserIdNotFound(res.getError()) && res.getStatus().equals(StatusCode.FAIL)) {
             log.error("Failed to trigger ad hoc check for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
@@ -157,9 +156,31 @@ public class CheckedSafeService {
                 || error.getMessage().startsWith("User with clientUserId");
     }
 
+    private String formatName(Driver driver) {
+        if(StringUtils.isBlank(driver.getMiddleName())) {
+            return driver.getFirstName() + " " + driver.getLastName();
+        } else {
+            return driver.getFirstName() + " " + driver.getMiddleName() + " " + driver.getLastName();
+        }
+    }
+
+    private String cropPostalCode(HomeAddress address) {
+        AddressComponent addressComponents = address.getAddressComponents();
+        String formattedAddress = address.getFormattedAddress();
+
+        if (addressComponents != null
+                && StringUtils.isNotBlank(addressComponents.getPostalCode())
+                && StringUtils.isNotBlank(formattedAddress)
+                && formattedAddress.contains(addressComponents.getPostalCode())) {
+            return formattedAddress.replace(", " + addressComponents.getPostalCode(), "");
+        }
+
+        return formattedAddress;
+    }
+
     public <C extends CheckedSafeCommand<R>, R extends CheckedSafeResponse> R call(C c) {
         R res = c.execute();
-        if (res.getStatus().equals(ResponseStatus.FAIL) && res.getError().getMessage().equals("API Token has expired")) {
+        if (res.getStatus().equals(StatusCode.FAIL) && res.getError().getMessage().equals("API Token has expired")) {
             log.info("Received api token expired error. Refreshing token");
             this.token = _getToken();
             c.setToken(token.getToken());

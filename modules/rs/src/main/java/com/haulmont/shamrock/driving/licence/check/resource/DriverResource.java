@@ -9,7 +9,7 @@ package com.haulmont.shamrock.driving.licence.check.resource;
 import com.haulmont.monaco.response.ErrorCode;
 import com.haulmont.monaco.response.Response;
 import com.haulmont.monaco.rs.utils.ParamUtils;
-import com.haulmont.shamrock.driving.licence.check.service.LicenceCheckService;
+import com.haulmont.shamrock.driving.licence.check.LicenceCheckService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

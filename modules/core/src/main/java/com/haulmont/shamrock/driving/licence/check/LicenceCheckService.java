@@ -4,13 +4,20 @@
  * Use is subject to license terms.
  */
 
-package com.haulmont.shamrock.driving.licence.check.service;
+package com.haulmont.shamrock.driving.licence.check;
 
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.CheckedSafeError;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.ClientStatus;
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.LicenceCheck;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.CheckSettings;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.Driver;
 import com.haulmont.shamrock.driving.licence.check.dto.PermissionMandateForm;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.MandateFormStatus;
+import com.haulmont.shamrock.driving.licence.check.mq.RabbitMqPublisher;
+import com.haulmont.shamrock.driving.licence.check.mq.dto.DrivingLicenceCheckCompleted;
+import com.haulmont.shamrock.driving.licence.check.service.CheckedSafeService;
+import com.haulmont.shamrock.driving.licence.check.service.DriverRegistryService;
+import com.haulmont.shamrock.driving.licence.check.service.EmailService;
 import com.haulmont.shamrock.driving.licence.check.storage.MandateFormStorage;
 import org.joda.time.DateTime;
 import org.picocontainer.annotations.Component;
@@ -19,6 +26,7 @@ import org.picocontainer.annotations.Inject;
 import java.util.UUID;
 
 import static com.haulmont.shamrock.driving.licence.check.dto.checked_safe.MandateFormStatus.*;
+import static com.haulmont.shamrock.driving.licence.check.utils.EventConverter.convert;
 
 @Component
 public class LicenceCheckService {
@@ -27,14 +35,18 @@ public class LicenceCheckService {
     private CheckedSafeService checkedSafeService;
     @Inject
     private MandateFormStorage mandateFormStorage;
+    @Inject
+    private RabbitMqPublisher rabbitMqPublisher;
+
+    @Inject
+    private EmailService emailService;
+    @Inject
+    private DrivingLicenceRepository drivingLicenceRepository;
+    @Inject
+    private DriverRegistryService driverRegistryService;
 
     public String requestMandateForm(UUID driverId, Driver driver, CheckSettings checkSettings) {
-        return mandateFormStorage.getSigningLink(driverId, driver, checkSettings).orElseGet(() -> {
-            var link = checkedSafeService.requestMandateForm(driverId, driver, checkSettings).getPermissionMandateUrl();
-            mandateFormStorage.save(driverId, driver, checkSettings, link);
-            return link;
-        }
-        );
+        return checkedSafeService.requestMandateForm(driverId, driver, checkSettings).getPermissionMandateUrl();
     }
 
     public PermissionMandateForm getCompleteMandate(UUID driverId) {
@@ -83,4 +95,18 @@ public class LicenceCheckService {
         checkedSafeService.updateUserStatus(driverId, status);
     }
 
+    public void handleLicenceCheck(LicenceCheck licenceCheck) {
+        //todo load minial view for driver(id, pid, callsign)
+        Driver driver = driverRegistryService.loadDriver(licenceCheck.getClientUserId());
+        DrivingLicenceCheckCompleted shamrockEvent = convert(driver, licenceCheck);
+
+        rabbitMqPublisher.publish(shamrockEvent);
+    }
+
+    public void handleLicenceCheckError(UUID driverId, CheckedSafeError error) {
+        //todo load minial view for driver(id, pid, callsign)
+        Driver driver = driverRegistryService.loadDriver(driverId);
+
+        rabbitMqPublisher.publish(convert(driver, error));
+    }
 }

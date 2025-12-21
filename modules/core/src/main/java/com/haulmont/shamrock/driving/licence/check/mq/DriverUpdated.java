@@ -29,7 +29,7 @@ public class DriverUpdated extends AbstractMessage {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static final class Data{
+    public static final class Data {
 
         @JsonProperty("driver")
         private Driver driver;

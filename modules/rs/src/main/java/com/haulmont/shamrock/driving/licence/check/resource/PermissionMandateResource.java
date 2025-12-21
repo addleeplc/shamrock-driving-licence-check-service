@@ -8,7 +8,7 @@ import com.haulmont.shamrock.driving.licence.check.dto.response.GeneratePermissi
 import com.haulmont.shamrock.driving.licence.check.dto.response.PermissionMandateFormResponse;
 import com.haulmont.shamrock.driving.licence.check.dto.response.PermissionMandateFormStatusResponse;
 import com.haulmont.shamrock.driving.licence.check.service.DriverRegistryService;
-import com.haulmont.shamrock.driving.licence.check.service.LicenceCheckService;
+import com.haulmont.shamrock.driving.licence.check.LicenceCheckService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -28,7 +28,7 @@ public class PermissionMandateResource {
 
     @POST
     @Path("{driverId:" + ParamUtils.UUID_PATTERN_STRING + "}")
-    public Response getPermissionMandateForm(GeneratePermissionMandateFormRequest request, @PathParam("driverId") String driverIdStr) {
+    public Response generatePermissionMandateForm(GeneratePermissionMandateFormRequest request, @PathParam("driverId") String driverIdStr) {
         Driver driver = request.getDriver();
         UUID driverId = UUID.fromString(driverIdStr);
 

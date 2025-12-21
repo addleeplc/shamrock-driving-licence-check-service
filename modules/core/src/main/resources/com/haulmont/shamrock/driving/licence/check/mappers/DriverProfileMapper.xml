@@ -8,6 +8,7 @@
 <!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.haulmont.shamrock.driving.licence.check.mappers">
 
+    <!--    todo get rid of direct update of SL_DRIVERS table-->
     <update id="updateDriverProfile">
         UPDATE SL_DRIVERS
         SET LICENSE_POINTS         = #{licencePoints},
@@ -15,12 +16,7 @@
             UPDATE_TS              = getDate(),
             UPDATED_BY             = #{createdBy,javaType=java.lang.Long,jdbcType=BIGINT},
             VERSION                = VERSION + 1
-        WHERE UUID = #{driverId,javaType=java.util.UUID,jdbcType=OTHER}
-
-        declare @DRIVER_PID numeric(19,0)
-
-        select @DRIVER_PID = (SELECT ID FROM SL_DRIVERS WHERE UUID = #{driverId,javaType=java.util.UUID,jdbcType=OTHER})
-
+        WHERE ID = #{driverPid,javaType=java.lang.Long,jdbcType=BIGINT}
 
         <foreach collection="convictions" item="conviction">
             INSERT INTO SL_DRIVER_CONVICTIONS (
@@ -42,17 +38,17 @@
                    0,
                    #{conviction.convictionDate,javaType=org.joda.time.LocalDate,jdbcType=DATE},
                    #{conviction.code,javaType=java.lang.String,jdbcType=VARCHAR},
-                   @DRIVER_PID,
+                   #{driverPid,javaType=java.lang.Long,jdbcType=BIGINT},
                    0,
-                   #{conviction.codeDescription,javaType=java.lang.String,jdbcType=VARCHAR}
+                   #{conviction.description,javaType=java.lang.String,jdbcType=VARCHAR}
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM SL_DRIVER_CONVICTIONS
-                WHERE CONVICTION_DATE = #{conviction.convictionDate,javaType=org.joda.time.LocalDate,jdbcType=DATE} AND
-                      OFFENCE_CODE = #{conviction.code,javaType=java.lang.String,jdbcType=VARCHAR} AND
-                      DRIVER_ID = @DRIVER_PID
+                WHERE CONVICTION_DATE = #{conviction.convictionDate,javaType=org.joda.time.LocalDate,jdbcType=DATE}
+                  AND OFFENCE_CODE = #{conviction.code,javaType=java.lang.String,jdbcType=VARCHAR}
+                  AND DRIVER_ID = #{driverPid,javaType=java.lang.Long,jdbcType=BIGINT}
+                  AND IS_DELETED = 0
             )
         </foreach>
     </update>
-
 </mapper>

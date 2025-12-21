@@ -7,12 +7,14 @@
 package com.haulmont.shamrock.driving.licence.check.dto.driver_registry;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.haulmont.monaco.jackson.annotations.SensitiveData;
 
 import java.util.Objects;
 
 public class HomeAddress {
 
     @JsonProperty("formatted_address")
+    @SensitiveData
     private String formattedAddress;
     @JsonProperty("address_components")
     private AddressComponent addressComponents;

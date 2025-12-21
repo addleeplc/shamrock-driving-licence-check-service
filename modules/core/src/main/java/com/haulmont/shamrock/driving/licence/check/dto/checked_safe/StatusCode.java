@@ -2,7 +2,7 @@ package com.haulmont.shamrock.driving.licence.check.dto.checked_safe;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum ResponseStatus {
+public enum StatusCode {
     @JsonProperty("Success")
     SUCCESS(),
     @JsonProperty("Fail")

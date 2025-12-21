@@ -45,6 +45,11 @@ public interface ServiceConfiguration {
     @Property("licenceCheck.declined.mailMessage")
     String getLicenceCheckDeclinedMailMessage();
 
+    @Property("mq.resourceName")
+    String getMqResource();
+    @Property("mq.licenceCheckExchange")
+    String getLicenceCheckExchange();
+
     @Property("mail.to")
     String getEmailTo();
     @Property("mail.subject")
@@ -55,5 +60,4 @@ public interface ServiceConfiguration {
 
     @Property("driverRegistry.apiKey")
     String getDriverRegistryApiKey();
-
 }
