@@ -11,6 +11,8 @@ public interface ServiceConfiguration {
     String MQ_DRIVER_CHANGE_RESOURCE_NAME = "mq.driver-change.resourceName";
     String MQ_DRIVER_CHANGE_CONSUMER = "mq.driver-change.consumer";
 
+    String DRIVER_INACTIVE_STATUSES = "driver.inactiveStatuses";
+
     @Property("redis.resourceName")
     String getRedisResource();
 
@@ -44,6 +46,9 @@ public interface ServiceConfiguration {
     String getLicenceCheckIncorrectMailMessage();
     @Property("licenceCheck.declined.mailMessage")
     String getLicenceCheckDeclinedMailMessage();
+
+    @Property(DRIVER_INACTIVE_STATUSES)
+    String getDriverInactiveStatuses();
 
     @Property("mq.resourceName")
     String getMqResource();

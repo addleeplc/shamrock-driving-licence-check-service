@@ -17,6 +17,8 @@ import com.haulmont.shamrock.driving.licence.check.mq.dto.DrivingLicenceCheckCom
 import com.haulmont.shamrock.driving.licence.check.mq.dto.DrivingLicenceCheckFailed;
 import org.joda.time.DateTime;
 
+import java.util.Objects;
+
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -40,6 +42,7 @@ public class EventConverter {
         data.setConvictions(
                 licenceCheck.getConvictions().stream()
                         .map(EventConverter::convert)
+                        .filter(Objects::nonNull)
                         .collect(toList())
         );
 
@@ -61,6 +64,10 @@ public class EventConverter {
 
     public static Conviction convert(com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.Conviction origin) {
         Conviction conviction =  new Conviction();
+//
+        if (origin.getConvictionDate() == null || origin.getCode() == null) {
+            return null;
+        }
 
         conviction.setConvictionDate(origin.getConvictionDate().toDateTimeAtStartOfDay());
         conviction.setOffenceDate(origin.getOffenceDate().toDateTimeAtStartOfDay());

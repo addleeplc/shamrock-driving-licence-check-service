@@ -8,9 +8,11 @@ package com.haulmont.shamrock.driving.licence.check.mq;
 
 import com.haulmont.monaco.mq.annotations.Subscribe;
 import com.haulmont.monaco.rabbit.mq.annotations.Consumer;
+import com.haulmont.shamrock.driving.licence.check.ConfigurationService;
 import com.haulmont.shamrock.driving.licence.check.ServiceConfiguration;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.ClientStatus;
 import com.haulmont.shamrock.driving.licence.check.LicenceCheckService;
+import com.haulmont.shamrock.driving.licence.check.service.DriverRegistryService;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
@@ -20,25 +22,31 @@ import org.slf4j.Logger;
 public class DriverChangeConsumer {
 
     @Inject
+    private ConfigurationService configurationService;
+    @Inject
     private Logger log;
     @Inject
     private LicenceCheckService licenceCheckService;
+    @Inject
+    private DriverRegistryService driverRegistryService;
 
     @Subscribe
     public void handleDriverUpdated(DriverUpdated driverUpdated){
         try {
-            if (driverUpdated.getData() == null) {
-                log.debug("ignore {} update due empty data", driverUpdated.getId());
+            if (driverUpdated.getData() == null || driverUpdated.getData().getDriver() == null) {
+                log.debug("ignore {} update due empty data or driver", driverUpdated.getId());
                 return;
             }
 
             var driver = driverUpdated.getData().getDriver();
-            if (driver == null || driver.getStatus() == null) {
-                log.debug("ignore {} update due empty working status", driverUpdated.getId());
-                return;
+            String status;
+            if (driver.getStatus() != null) {
+                status = driver.getStatus().getCode();
+            } else {
+                status = driverRegistryService.loadDriver(driver.getId()).getStatus().getCode();
             }
 
-            if (driver.getStatus().getCode().equals("Inactive")) {
+            if (configurationService.getInactiveStatuses().contains(status)) {
                 licenceCheckService.updateClientStatus(driver.getId(), ClientStatus.INACTIVE);
             } else {
                 licenceCheckService.updateClientStatus(driver.getId(), ClientStatus.ACTIVE);

@@ -35,10 +35,6 @@ public class WebhookResource {
     @Inject
     private ServiceConfiguration serviceConfiguration;
     @Inject
-    private DrivingLicenceRepository driverProfileService;
-    @Inject
-    private EmailService emailService;
-    @Inject
     private LicenceCheckService licenceCheckService;
 
     /**
@@ -53,8 +49,7 @@ public class WebhookResource {
                 licenceCheckService.handleLicenceCheck(request.getLicenceCheck());
             } else {
                 log.info("Received failed LicenceCheckCompleted request: {}", request.getError().getMessage());
-                //todo driverId, awaiting response from checkedsafe
-                licenceCheckService.handleLicenceCheckError(request.getDriverId(), request.getError());
+                licenceCheckService.handleLicenceCheckError(request.getClientUserId(), request.getError());
             }
 
             return new Response(ErrorCode.OK);

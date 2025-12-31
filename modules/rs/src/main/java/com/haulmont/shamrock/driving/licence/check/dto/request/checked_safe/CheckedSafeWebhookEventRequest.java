@@ -15,9 +15,8 @@ import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.Lice
 import java.util.UUID;
 
 public class CheckedSafeWebhookEventRequest {
-    //todo remove
-    @JsonProperty("driverId")
-    private UUID driverId;
+    @JsonProperty("clientUserId")
+    private UUID clientUserId;
 
     @JsonProperty("event")
     private EventType eventType;
@@ -63,11 +62,11 @@ public class CheckedSafeWebhookEventRequest {
         this.statusCode = statusCode;
     }
 
-    public UUID getDriverId() {
-        return driverId;
+    public UUID getClientUserId() {
+        return clientUserId;
     }
 
-    public void setDriverId(UUID driverId) {
-        this.driverId = driverId;
+    public void setClientUserId(UUID clientUserId) {
+        this.clientUserId = clientUserId;
     }
 }

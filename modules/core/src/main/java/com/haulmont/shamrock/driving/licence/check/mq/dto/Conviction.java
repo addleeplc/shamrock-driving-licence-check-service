@@ -22,7 +22,7 @@ public class Conviction {
     private String description;
 
     @JsonProperty("points")
-    private int points;
+    private Integer points;
 
     @JsonProperty("date")
     @JsonSerialize(using = DateTimeAdapter.Serializer.class)
@@ -63,11 +63,11 @@ public class Conviction {
         this.description = description;
     }
 
-    public int getPoints() {
+    public Integer getPoints() {
         return points;
     }
 
-    public void setPoints(int points) {
+    public void setPoints(Integer points) {
         this.points = points;
     }
 

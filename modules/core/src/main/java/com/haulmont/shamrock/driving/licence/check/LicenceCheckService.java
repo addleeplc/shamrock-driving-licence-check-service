@@ -96,7 +96,6 @@ public class LicenceCheckService {
     }
 
     public void handleLicenceCheck(LicenceCheck licenceCheck) {
-        //todo load minial view for driver(id, pid, callsign)
         Driver driver = driverRegistryService.loadDriver(licenceCheck.getClientUserId());
         DrivingLicenceCheckCompleted shamrockEvent = convert(driver, licenceCheck);
 
@@ -104,7 +103,6 @@ public class LicenceCheckService {
     }
 
     public void handleLicenceCheckError(UUID driverId, CheckedSafeError error) {
-        //todo load minial view for driver(id, pid, callsign)
         Driver driver = driverRegistryService.loadDriver(driverId);
 
         rabbitMqPublisher.publish(convert(driver, error));
