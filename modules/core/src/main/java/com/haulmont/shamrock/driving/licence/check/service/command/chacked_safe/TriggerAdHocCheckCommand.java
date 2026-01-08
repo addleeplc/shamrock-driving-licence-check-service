@@ -16,8 +16,8 @@ public class TriggerAdHocCheckCommand extends CheckedSafeCommand<CheckedSafeResp
 
     private final UUID driverId;
 
-    public TriggerAdHocCheckCommand(String token, UUID driverId) {
-        super(CheckedSafeResponse.class, token);
+    public TriggerAdHocCheckCommand(UUID driverId) {
+        super(CheckedSafeResponse.class);
         this.driverId = driverId;
     }
 

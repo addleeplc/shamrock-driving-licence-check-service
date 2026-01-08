@@ -14,8 +14,8 @@ public class UpdateUserStatusCommand extends CheckedSafeCommand<CheckedSafeRespo
 
     private final UpdateUserStatusRequest request;
 
-    public UpdateUserStatusCommand(String token, UpdateUserStatusRequest request) {
-        super(CheckedSafeResponse.class, token);
+    public UpdateUserStatusCommand(UpdateUserStatusRequest request) {
+        super(CheckedSafeResponse.class);
         this.request = request;
     }
 

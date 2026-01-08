@@ -17,9 +17,8 @@ public abstract class CheckedSafeCommand<T>  extends UnirestCommand<T> {
 
     protected String token;
 
-    public CheckedSafeCommand(Class<T> responseClass, String token) {
+    public CheckedSafeCommand(Class<T> responseClass) {
         super(SERVICE, responseClass);
-        this.token = token;
     }
 
     public void setToken(String token) {

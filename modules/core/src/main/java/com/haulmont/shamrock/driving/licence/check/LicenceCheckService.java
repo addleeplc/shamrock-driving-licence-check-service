@@ -9,7 +9,7 @@ package com.haulmont.shamrock.driving.licence.check;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.CheckedSafeError;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.ClientStatus;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.LicenceCheck;
-import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.CheckSettings;
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.CheckSettings;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.Driver;
 import com.haulmont.shamrock.driving.licence.check.dto.PermissionMandateForm;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.MandateFormStatus;
@@ -18,7 +18,6 @@ import com.haulmont.shamrock.driving.licence.check.mq.dto.DrivingLicenceCheckCom
 import com.haulmont.shamrock.driving.licence.check.service.CheckedSafeService;
 import com.haulmont.shamrock.driving.licence.check.service.DriverRegistryService;
 import com.haulmont.shamrock.driving.licence.check.service.EmailService;
-import com.haulmont.shamrock.driving.licence.check.storage.MandateFormStorage;
 import org.joda.time.DateTime;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
@@ -33,8 +32,7 @@ public class LicenceCheckService {
 
     @Inject
     private CheckedSafeService checkedSafeService;
-    @Inject
-    private MandateFormStorage mandateFormStorage;
+
     @Inject
     private RabbitMqPublisher rabbitMqPublisher;
 
@@ -49,8 +47,8 @@ public class LicenceCheckService {
         return checkedSafeService.requestMandateForm(driverId, driver, checkSettings).getPermissionMandateUrl();
     }
 
-    public PermissionMandateForm getCompleteMandate(UUID driverId) {
-        var res = checkedSafeService.getCompleteMandate(driverId);
+    public PermissionMandateForm getCompletedMandate(UUID driverId) {
+        var res = checkedSafeService.getCompletedMandate(driverId);
 
         if (res == null) {
             var status = getMandateFormStatus(driverId);

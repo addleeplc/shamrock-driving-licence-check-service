@@ -14,8 +14,8 @@ public class RequestMandateFormCommand extends CheckedSafeCommand<MandateFormRes
 
     private final MandateFormRequest request;
 
-    public RequestMandateFormCommand(String token, MandateFormRequest request) {
-        super(MandateFormResponse.class, token);
+    public RequestMandateFormCommand(MandateFormRequest request) {
+        super(MandateFormResponse.class);
         this.request = request;
     }
 

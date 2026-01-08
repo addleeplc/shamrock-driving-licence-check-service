@@ -1,10 +1,10 @@
 /*
- * Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+ * Copyright 2008 - 2026 Haulmont Technology Ltd. All Rights Reserved.
  * Haulmont Technology proprietary and confidential.
  * Use is subject to license terms.
  */
 
-package com.haulmont.shamrock.driving.licence.check.dto.driver_registry;
+package com.haulmont.shamrock.driving.licence.check.dto.checked_safe;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -1,18 +1,24 @@
 package com.haulmont.shamrock.driving.licence.check.service;
 
+import com.haulmont.monaco.AppContext;
 import com.haulmont.monaco.ServiceException;
+import com.haulmont.monaco.redis.Redis;
+import com.haulmont.monaco.redis.cache.RedisCacheObjectCodec;
+import com.haulmont.monaco.redis.cache.codec.JacksonObjectCodec;
+import com.haulmont.monaco.redis.cache.codec.PropertyObjectCodec;
 import com.haulmont.monaco.response.ErrorCode;
 import com.haulmont.shamrock.driving.licence.check.ServiceConfiguration;
-import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.CheckedSafeResponse;
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.*;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.*;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.*;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.MandateFormRequest;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.TokenRequest;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.UpdateUserStatusRequest;
-import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.MandateFormResponse;
+import com.haulmont.shamrock.driving.licence.check.redis.LockRegistry;
 import com.haulmont.shamrock.driving.licence.check.service.command.chacked_safe.*;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
@@ -22,48 +28,24 @@ import java.util.UUID;
 
 @Component
 public class CheckedSafeService {
+    public static final String API_TOKEN_REDIS_KEY_NAME = "token";
+    public static final int API_TOKEN_REDIS_DEFAULT_TTL_SECONDS = 60;
+
+    private static final RedisCacheObjectCodec<String> tokenRedisKeyCodec = new PropertyObjectCodec<>("checkedsafe", String.class, null);
+    private static final  String API_TOKEN_REDIS_KEY = tokenRedisKeyCodec.encode(API_TOKEN_REDIS_KEY_NAME);
+
+    private final RedisCacheObjectCodec<ApiToken> apiTokenRedisValueCodec = new JacksonObjectCodec<>(ApiToken.class);
 
     @Inject
     private ServiceConfiguration serviceConfiguration;
     @Inject
     private Logger log;
 
-    public void start() {
-        this.token = _getToken();
-        log.info("Checked safe token initialized. validUntil: {}", token.getValidUntil());
-    }
-
-    public Token _getToken() {
-        var res = new GetTokenCommand(
-                serviceConfiguration.getCheckedSafeCallbackToken(),
-                new TokenRequest(
-                        serviceConfiguration.getCheckedSafeUsername(),
-                        serviceConfiguration.getCheckedSafePassword(),
-                        serviceConfiguration.getCheckedSafeCallbackUrl()
-                )
-        ).execute();
-
-        if (res.getStatus().equals(StatusCode.SUCCESS)) {
-            return new Token(res.getApiToken().getToken(), res.getApiToken().getValidUntil());
-        } else {
-            log.error("Failed to obtain checked safe api token: {}", res.getError().getMessage());
-            throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
-        }
-    }
-
-    private Token token;
-    public synchronized String getToken() {
-        if (DateTime.now().isAfter(token.getValidUntil().plusSeconds(10))) {
-            this.token = _getToken();
-            log.info("Checked safe token refreshed. validUntil: {}", token.getValidUntil());
-        }
-
-        return token.getToken();
-    }
+    @Inject
+    private LockRegistry lockRegistry;
 
     public MandateFormResponse.PermissionMandateRequest requestMandateForm(UUID driverId, Driver driver, CheckSettings checkSettings) {
-        var res = call(new RequestMandateFormCommand(
-                getToken(),
+        MandateFormResponse res = call(new RequestMandateFormCommand(
                 new MandateFormRequest(
                         driver.getDrivingLicence(),
                         formatName(driver),
@@ -100,8 +82,7 @@ public class CheckedSafeService {
     }
 
     public void updateUserStatus(UUID driverId, ClientStatus status) {
-        var res = call(new UpdateUserStatusCommand(
-                getToken(),
+        CheckedSafeResponse res = call(new UpdateUserStatusCommand(
                 new UpdateUserStatusRequest(
                         driverId,
                         status
@@ -114,8 +95,8 @@ public class CheckedSafeService {
         }
     }
 
-    public LicencePermissionMandate getCompleteMandate(UUID driverId) {
-        var res = call(new GetCompleteMandateCommand(getToken(), driverId));
+    public LicencePermissionMandate getCompletedMandate(UUID driverId) {
+        CompletedMandateResponse res = call(new GetCompletedMandateCommand(driverId));
 
         if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getLicencePermissionMandateId();
@@ -128,7 +109,7 @@ public class CheckedSafeService {
     }
 
     public PermissionMandateFormStatus getMandateFormStatus(UUID driverId) {
-        var res = call(new RequestPermissionMandateFormStatusCommand(getToken(), driverId));
+        PermissionMandateFormStatusResponse res = call(new RequestPermissionMandateFormStatusCommand(driverId));
 
         if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getPermissionMandateFormStatus();
@@ -141,12 +122,109 @@ public class CheckedSafeService {
     }
 
     public void triggerAdHocCheck(UUID driverId) {
-        var res = call(new TriggerAdHocCheckCommand(getToken(), driverId));
+        CheckedSafeResponse res = call(new TriggerAdHocCheckCommand(driverId));
 
         if (!isClientUserIdNotFound(res.getError()) && res.getStatus().equals(StatusCode.FAIL)) {
             log.error("Failed to trigger ad hoc check for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
+    }
+
+    private ApiToken requestToken() {
+        TokenResponse res = new GetTokenCommand(
+                serviceConfiguration.getCheckedSafeCallbackToken(),
+                new TokenRequest(
+                        serviceConfiguration.getCheckedSafeUsername(),
+                        serviceConfiguration.getCheckedSafePassword(),
+                        serviceConfiguration.getCheckedSafeCallbackUrl()
+                )
+        ).execute();
+
+        if (StatusCode.SUCCESS.equals(res.getStatus())) {
+            return res.getApiToken();
+        } else {
+            String msg = res.getError() != null ? res.getError().getMessage() : null;
+            log.error("Failed to obtain checked safe api token: {}", msg);
+            throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
+        }
+    }
+
+    private <C extends CheckedSafeCommand<R>, R extends CheckedSafeResponse> R call(C command) {
+        Optional<ApiToken> cachedToken = getToken();
+        String cachedTokenValue = cachedToken.map(ApiToken::getToken).orElse(null);
+
+        if(cachedToken.isPresent()) {
+            command.setToken(cachedTokenValue);
+            R response = command.execute();
+
+            if(!isTokenRelatedError(response)) {
+                return response;
+            }
+        }
+
+        log.info("CheckedSafe API token is invalid. Acquiring distributed token lock to refresh it");
+
+        return lockRegistry.withTokenLock(() -> {
+            Optional<ApiToken> actualCachedToken = getToken();
+            String actualCachedTokenValue = actualCachedToken.map(ApiToken::getToken).orElse(null);
+
+            if(actualCachedTokenValue != null && !actualCachedTokenValue.equals(cachedTokenValue)) {
+                command.setToken(actualCachedTokenValue);
+                R retryResponse = command.execute();
+
+                if(!isTokenRelatedError(retryResponse)) {
+                    return retryResponse;
+                }
+            }
+
+            ApiToken newToken = requestToken();
+            saveToken(newToken);
+
+            command.setToken(newToken.getToken());
+            return command.execute();
+        });
+    }
+
+    private void saveToken(ApiToken newToken) {
+        getRedis().setex(API_TOKEN_REDIS_KEY, calculateTtlSeconds(newToken), apiTokenRedisValueCodec.encode(newToken));
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean isTokenRelatedError(CheckedSafeResponse response) {
+        if (response == null || response.getStatus() == null || response.getError() == null) {
+            return false;
+        }
+        return StatusCode.FAIL.equals(response.getStatus())
+                && ("API Token has expired".equalsIgnoreCase(response.getError().getMessage())
+                    || "API Token is missing".equalsIgnoreCase(response.getError().getMessage()));
+    }
+
+    private long calculateTtlSeconds(ApiToken apiToken) {
+        DateTime validUntil = apiToken.getValidUntil();
+
+        if (validUntil == null) {
+            return API_TOKEN_REDIS_DEFAULT_TTL_SECONDS;
+        }
+        DateTime now = DateTime.now();
+        if (!validUntil.isAfter(now)) {
+            return API_TOKEN_REDIS_DEFAULT_TTL_SECONDS;
+        }
+        Duration duration = new Duration(now, validUntil);
+        return Math.max(API_TOKEN_REDIS_DEFAULT_TTL_SECONDS, duration.getStandardSeconds());
+    }
+    
+    private Optional<ApiToken> getToken() {
+        String existingTokenStr = getRedis().get(API_TOKEN_REDIS_KEY);
+        if (existingTokenStr != null) {
+            return Optional.ofNullable(apiTokenRedisValueCodec.decode(existingTokenStr));
+        }  else {
+            return Optional.empty();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Redis<String, String> getRedis() {
+        return AppContext.getResources().get(serviceConfiguration.getRedisResource(), Redis.class);
     }
 
     private boolean isClientUserIdNotFound(CheckedSafeError error) {
@@ -177,17 +255,4 @@ public class CheckedSafeService {
 
         return formattedAddress;
     }
-
-    public <C extends CheckedSafeCommand<R>, R extends CheckedSafeResponse> R call(C c) {
-        R res = c.execute();
-        if (res.getStatus().equals(StatusCode.FAIL) && res.getError().getMessage().equals("API Token has expired")) {
-            log.info("Received api token expired error. Refreshing token");
-            this.token = _getToken();
-            c.setToken(token.getToken());
-            return c.execute();
-        } else {
-            return res;
-        }
-    }
-
 }

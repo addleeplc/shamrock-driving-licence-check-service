@@ -50,7 +50,7 @@ public class PermissionMandateResource {
     @GET
     @Path("{driverId:" + ParamUtils.UUID_PATTERN_STRING + "}")
     public PermissionMandateFormResponse getPermissionMandateForm(@PathParam("driverId") String driverId) {
-        return new PermissionMandateFormResponse(licenceCheckService.getCompleteMandate(UUID.fromString(driverId)));
+        return new PermissionMandateFormResponse(licenceCheckService.getCompletedMandate(UUID.fromString(driverId)));
     }
 
     @GET

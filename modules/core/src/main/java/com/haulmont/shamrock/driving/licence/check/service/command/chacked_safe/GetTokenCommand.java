@@ -16,7 +16,7 @@ public class GetTokenCommand extends CheckedSafeCommand<TokenResponse> {
     private final TokenRequest tokenRequest;
 
     public GetTokenCommand(String callbackToken, TokenRequest tokenRequest) {
-        super(TokenResponse.class, null);
+        super(TokenResponse.class);
         this.callbackToken = callbackToken;
         this.tokenRequest = tokenRequest;
     }

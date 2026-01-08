@@ -7,7 +7,7 @@
 package com.haulmont.shamrock.driving.licence.check.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.CheckSettings;
+import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.CheckSettings;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.Driver;
 
 public class GeneratePermissionMandateFormRequest {

@@ -9,7 +9,7 @@ package com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.LicencePermissionMandate;
 
-public class CompleteMandateResponse extends CheckedSafeResponse {
+public class CompletedMandateResponse extends CheckedSafeResponse {
 
     @JsonProperty("licencePermissionMandate")
     private LicencePermissionMandate licencePermissionMandateId;

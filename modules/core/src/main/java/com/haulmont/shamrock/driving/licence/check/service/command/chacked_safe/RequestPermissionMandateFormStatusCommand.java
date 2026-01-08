@@ -16,8 +16,8 @@ public class RequestPermissionMandateFormStatusCommand extends CheckedSafeComman
 
     private final UUID driverId;
 
-    public RequestPermissionMandateFormStatusCommand(String token, UUID driverId) {
-        super(PermissionMandateFormStatusResponse.class, token);
+    public RequestPermissionMandateFormStatusCommand(UUID driverId) {
+        super(PermissionMandateFormStatusResponse.class);
         this.driverId = driverId;
     }
 
