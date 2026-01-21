@@ -33,8 +33,6 @@ public class WebhookResource {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookResource.class);
     @Inject
-    private ServiceConfiguration serviceConfiguration;
-    @Inject
     private LicenceCheckService licenceCheckService;
 
     /**

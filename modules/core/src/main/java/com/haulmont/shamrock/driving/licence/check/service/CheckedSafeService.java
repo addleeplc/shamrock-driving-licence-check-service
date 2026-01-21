@@ -24,7 +24,6 @@ import org.picocontainer.annotations.Inject;
 import org.slf4j.Logger;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class CheckedSafeService {
@@ -44,7 +43,7 @@ public class CheckedSafeService {
     @Inject
     private LockRegistry lockRegistry;
 
-    public MandateFormResponse.PermissionMandateRequest requestMandateForm(UUID driverId, Driver driver, CheckSettings checkSettings) {
+    public MandateFormResponse.PermissionMandateRequest requestMandateForm(Driver driver, CheckSettings checkSettings) {
         MandateFormResponse res = call(new RequestMandateFormCommand(
                 new MandateFormRequest(
                         driver.getDrivingLicence(),
@@ -59,13 +58,14 @@ public class CheckedSafeService {
                                 .map(HomeAddress::getAddressComponents)
                                 .map(AddressComponent::getPostalCode)
                                 .orElse(null),
+                        driver.getDrivingLicenceExpiry(),
                         Optional.ofNullable(checkSettings)
                                 .map(CheckSettings::getCpcEnabled)
                                 .orElse(false),
                         Optional.ofNullable(checkSettings)
                                 .map(CheckSettings::getTachographEnabled)
                                 .orElse(false),
-                        driverId,
+                        driver.getNumber(),
                         serviceConfiguration.getCheckedSafeMandateFormLinkExpiryMinutes(),
                         serviceConfiguration.getCheckedSafeMandateFormSuccessRedirectUrl()
                 )
@@ -76,56 +76,56 @@ public class CheckedSafeService {
         } else if (res.getError().getMessage().equals("User with same clientUserId but different name or surname found")) {
           throw new ServiceException(ErrorCode.BAD_REQUEST, "User with same driver id but different name or surname found");
         } else {
-            log.error("Failed to request mandate form for driver: {}. ErrorMessage: {}", driverId, res.getError().getMessage());
+            log.error("Failed to request mandate form for driver: {}. ErrorMessage: {}", driver.getId(), res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
     }
 
-    public void updateUserStatus(UUID driverId, ClientStatus status) {
+    public void updateUserStatus(String driverNumber, ClientStatus status) {
         CheckedSafeResponse res = call(new UpdateUserStatusCommand(
                 new UpdateUserStatusRequest(
-                        driverId,
+                        driverNumber,
                         status
                 )
         ));
 
         if (res.getError() != null && !isClientUserIdNotFound(res.getError()) && res.getStatus().equals(StatusCode.FAIL)) {
-            log.error("Failed to update user status for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
+            log.error("Failed to update user status for driver: {}. ErrorMessage: : {}", driverNumber, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
     }
 
-    public LicencePermissionMandate getCompletedMandate(UUID driverId) {
-        CompletedMandateResponse res = call(new GetCompletedMandateCommand(driverId));
+    public LicencePermissionMandate getCompletedMandate(String driverNumber) {
+        CompletedMandateResponse res = call(new GetCompletedMandateCommand(driverNumber));
 
         if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getLicencePermissionMandateId();
         } else if (isClientUserIdNotFound(res.getError())) {
             return null;
         } else {
-            log.error("Failed to get complete mandate for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
+            log.error("Failed to get complete mandate for driver: {}. ErrorMessage: : {}", driverNumber, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
     }
 
-    public PermissionMandateFormStatus getMandateFormStatus(UUID driverId) {
-        PermissionMandateFormStatusResponse res = call(new RequestPermissionMandateFormStatusCommand(driverId));
+    public PermissionMandateFormStatus getMandateFormStatus(String driverNumber) {
+        PermissionMandateFormStatusResponse res = call(new RequestPermissionMandateFormStatusCommand(driverNumber));
 
         if (res.getStatus().equals(StatusCode.SUCCESS)) {
             return res.getPermissionMandateFormStatus();
         } else if (isClientUserIdNotFound(res.getError())) {
             return null;
         } else {
-            log.error("Failed to request mandatory form status for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
+            log.error("Failed to request mandatory form status for driver: {}. ErrorMessage: : {}", driverNumber, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
     }
 
-    public void triggerAdHocCheck(UUID driverId) {
-        CheckedSafeResponse res = call(new TriggerAdHocCheckCommand(driverId));
+    public void triggerAdHocCheck(String driverNumber) {
+        CheckedSafeResponse res = call(new TriggerAdHocCheckCommand(driverNumber));
 
-        if (!isClientUserIdNotFound(res.getError()) && res.getStatus().equals(StatusCode.FAIL)) {
-            log.error("Failed to trigger ad hoc check for driver: {}. ErrorMessage: : {}", driverId, res.getError().getMessage());
+        if (res.getStatus().equals(StatusCode.FAIL) && !isClientUserIdNotFound(res.getError())) {
+            log.error("Failed to trigger ad hoc check for driver: {}. ErrorMessage: : {}", driverNumber, res.getError().getMessage());
             throw new ServiceException(ErrorCode.FAILED_DEPENDENCY, "Fail to call checked safe");
         }
     }
@@ -231,7 +231,8 @@ public class CheckedSafeService {
         return error.getMessage().startsWith("No completed mandate found for clientUserId:")
                 || error.getMessage().startsWith("No mandate form found for clientUserId:")
                 || error.getMessage().equals("Mandate form not found")
-                || error.getMessage().startsWith("User with clientUserId");
+                || error.getMessage().startsWith("User with clientUserId")
+                || error.getMessage().equals("User does not have any valid mandate");
     }
 
     private String formatName(Driver driver) {

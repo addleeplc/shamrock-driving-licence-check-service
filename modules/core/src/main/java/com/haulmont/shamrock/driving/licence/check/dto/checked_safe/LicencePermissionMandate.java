@@ -17,7 +17,7 @@ import java.util.UUID;
 public class LicencePermissionMandate {
 
     @JsonProperty("clientUserId")
-    private UUID clientUserId;
+    private String clientUserId;
     @JsonProperty("permissionMandatePdf")
     private String permissionMandatePdf;
     @JsonProperty("completedOn")
@@ -29,7 +29,7 @@ public class LicencePermissionMandate {
     @JsonDeserialize(using = CheckedSafeDateTimeAdapter.Deserializer.class)
     private DateTime expiresOn;
 
-    public UUID getClientUserId() {
+    public String getClientUserId() {
         return clientUserId;
     }
 

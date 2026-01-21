@@ -9,7 +9,8 @@ package com.haulmont.shamrock.driving.licence.check.service;
 import com.haulmont.shamrock.driving.licence.check.ServiceConfiguration;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.Driver;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.WorkingStatus;
-import com.haulmont.shamrock.driving.licence.check.service.command.LoadDriverCommand;
+import com.haulmont.shamrock.driving.licence.check.service.command.driver_registry.LoadDriverByIdCommand;
+import com.haulmont.shamrock.driving.licence.check.service.command.driver_registry.LoadDriverByNumberCommand;
 import com.haulmont.shamrock.driving.licence.check.service.command.UpdateWorkingStatusCommand;
 import com.haulmont.shamrock.driving.licence.check.dto.driver_registry.DriverResponse;
 import org.picocontainer.annotations.Component;
@@ -31,6 +32,10 @@ public class DriverRegistryService {
     }
 
     public Driver loadDriver(UUID driverId) {
-        return call(() -> new LoadDriverCommand(driverId), response -> extract(response, DriverResponse::getDriver));
+        return call(() -> new LoadDriverByIdCommand(driverId), response -> extract(response, DriverResponse::getDriver));
+    }
+
+    public Driver loadDriver(String number) {
+        return call(() -> new LoadDriverByNumberCommand(number), response -> extract(response, it -> it.getDrivers().stream().findAny().orElse(null)));
     }
 }

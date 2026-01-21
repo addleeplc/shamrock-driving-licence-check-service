@@ -23,6 +23,8 @@ public class Driver {
 
     @JsonProperty("id")
     private UUID id;
+    @JsonProperty("number")
+    private String number;
     @JsonProperty("callsign")
     private String callsign;
     @JsonProperty("first_name")
@@ -48,6 +50,10 @@ public class Driver {
     private HomeAddress homeAddress;
     @JsonProperty("working_status")
     private WorkingStatus status;
+    @JsonProperty("driving_licence_expiry")
+    @JsonSerialize(using = LocalDateAdapter.Serializer.class)
+    @JsonDeserialize(using = LocalDateAdapter.Deserializer.class)
+    private LocalDate drivingLicenceExpiry;
 
     public Long getPid() {
         return pid;
@@ -65,6 +71,10 @@ public class Driver {
         this.id = id;
     }
 
+    public String getNumber() {
+        return number;
+    }
+
     public String getCallsign() {
         return callsign;
     }
@@ -77,56 +87,28 @@ public class Driver {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
     public String getMiddleName() {
         return middleName;
-    }
-
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
     }
 
     public String getLastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public String getFullName() {
         return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
     public String getDrivingLicence() {
         return drivingLicence;
     }
 
-    public void setDrivingLicence(String drivingLicence) {
-        this.drivingLicence = drivingLicence;
-    }
-
     public HomeAddress getHomeAddress() {
         return homeAddress;
-    }
-
-    public void setHomeAddress(HomeAddress homeAddress) {
-        this.homeAddress = homeAddress;
     }
 
     public WorkingStatus getStatus() {
@@ -137,16 +119,20 @@ public class Driver {
         this.status = status;
     }
 
+    public LocalDate getDrivingLicenceExpiry() {
+        return drivingLicenceExpiry;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Driver driver = (Driver) o;
-        return Objects.equals(callsign, driver.callsign) && Objects.equals(firstName, driver.firstName) && Objects.equals(lastName, driver.lastName) && Objects.equals(fullName, driver.fullName) && Objects.equals(dateOfBirth, driver.dateOfBirth) && Objects.equals(drivingLicence, driver.drivingLicence) && Objects.equals(homeAddress, driver.homeAddress) && Objects.equals(status, driver.status);
+        return Objects.equals(callsign, driver.callsign) && Objects.equals(firstName, driver.firstName) && Objects.equals(lastName, driver.lastName) && Objects.equals(fullName, driver.fullName) && Objects.equals(dateOfBirth, driver.dateOfBirth) && Objects.equals(drivingLicence, driver.drivingLicence) && Objects.equals(homeAddress, driver.homeAddress) && Objects.equals(status, driver.status) && Objects.equals(drivingLicenceExpiry, driver.drivingLicenceExpiry);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(callsign, firstName, lastName, fullName, dateOfBirth, drivingLicence, homeAddress, status);
+        return Objects.hash(callsign, firstName, lastName, fullName, dateOfBirth, drivingLicence, homeAddress, status, drivingLicenceExpiry);
     }
 
 }

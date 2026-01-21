@@ -17,7 +17,6 @@ import com.haulmont.shamrock.driving.licence.check.mq.RabbitMqPublisher;
 import com.haulmont.shamrock.driving.licence.check.mq.dto.DrivingLicenceCheckCompleted;
 import com.haulmont.shamrock.driving.licence.check.service.CheckedSafeService;
 import com.haulmont.shamrock.driving.licence.check.service.DriverRegistryService;
-import com.haulmont.shamrock.driving.licence.check.service.EmailService;
 import org.joda.time.DateTime;
 import org.picocontainer.annotations.Component;
 import org.picocontainer.annotations.Inject;
@@ -35,23 +34,19 @@ public class LicenceCheckService {
 
     @Inject
     private RabbitMqPublisher rabbitMqPublisher;
-
-    @Inject
-    private EmailService emailService;
-    @Inject
-    private DrivingLicenceRepository drivingLicenceRepository;
     @Inject
     private DriverRegistryService driverRegistryService;
 
-    public String requestMandateForm(UUID driverId, Driver driver, CheckSettings checkSettings) {
-        return checkedSafeService.requestMandateForm(driverId, driver, checkSettings).getPermissionMandateUrl();
+    public String requestMandateForm(Driver driver, CheckSettings checkSettings) {
+        return checkedSafeService.requestMandateForm(driver, checkSettings).getPermissionMandateUrl();
     }
 
     public PermissionMandateForm getCompletedMandate(UUID driverId) {
-        var res = checkedSafeService.getCompletedMandate(driverId);
+        var driver = driverRegistryService.loadDriver(driverId);
+        var res = checkedSafeService.getCompletedMandate(driver.getNumber());
 
         if (res == null) {
-            var status = getMandateFormStatus(driverId);
+            var status = _getMandateFormStatus(driver.getNumber());
             return new PermissionMandateForm(status);
         }
 
@@ -71,11 +66,17 @@ public class LicenceCheckService {
     }
 
     public void triggerAdHocCheck(UUID driverId) {
-        checkedSafeService.triggerAdHocCheck(driverId);
+        var driver = driverRegistryService.loadDriver(driverId);
+        checkedSafeService.triggerAdHocCheck(driver.getNumber());
     }
 
     public MandateFormStatus getMandateFormStatus(UUID driverId) {
-        var status = checkedSafeService.getMandateFormStatus(driverId);
+        var driver = driverRegistryService.loadDriver(driverId);
+        return _getMandateFormStatus(driver.getNumber());
+    }
+
+    private MandateFormStatus _getMandateFormStatus(String driverNumber) {
+        var status = checkedSafeService.getMandateFormStatus(driverNumber);
         if (status == null) {
             return NOT_GENERATED;
         } else if (!status.getMandateFormCompleted() && status.getExpired()) {
@@ -89,8 +90,8 @@ public class LicenceCheckService {
         return null;
     }
 
-    public void updateClientStatus(UUID driverId, ClientStatus status) {
-        checkedSafeService.updateUserStatus(driverId, status);
+    public void updateClientStatus(String driverNumber, ClientStatus status) {
+        checkedSafeService.updateUserStatus(driverNumber, status);
     }
 
     public void handleLicenceCheck(LicenceCheck licenceCheck) {
@@ -100,8 +101,8 @@ public class LicenceCheckService {
         rabbitMqPublisher.publish(shamrockEvent);
     }
 
-    public void handleLicenceCheckError(UUID driverId, CheckedSafeError error) {
-        Driver driver = driverRegistryService.loadDriver(driverId);
+    public void handleLicenceCheckError(String driverNumber, CheckedSafeError error) {
+        Driver driver = driverRegistryService.loadDriver(driverNumber);
 
         rabbitMqPublisher.publish(convert(driver, error));
     }

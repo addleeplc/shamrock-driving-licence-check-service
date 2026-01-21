@@ -29,6 +29,7 @@ public abstract class CheckedSafeCommand<T>  extends UnirestCommand<T> {
     protected boolean isOK(int status) {
         return super.isOK(status)
                 || status == HttpStatus.SC_BAD_REQUEST
+                || status == HttpStatus.SC_FORBIDDEN
                 || status == HttpStatus.SC_NOT_FOUND;
     }
 }

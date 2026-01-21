@@ -10,15 +10,13 @@ import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.Clie
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.CompletedMandateResponse;
 import kong.unirest.HttpRequest;
 
-import java.util.UUID;
-
 public class GetCompletedMandateCommand extends CheckedSafeCommand<CompletedMandateResponse> {
 
-    private final UUID clientUserId;
+    private final String driverNumber;
 
-    public GetCompletedMandateCommand(UUID clientUserId) {
+    public GetCompletedMandateCommand(String driverNumber) {
         super(CompletedMandateResponse.class);
-        this.clientUserId = clientUserId;
+        this.driverNumber = driverNumber;
     }
 
     @Override
@@ -26,7 +24,7 @@ public class GetCompletedMandateCommand extends CheckedSafeCommand<CompletedMand
         return post(url, path)
                 .header("Content-Type", "application/json")
                 .header(TOKEN_HEADER, token)
-                .body(new ClientUserIdRequest(clientUserId));
+                .body(new ClientUserIdRequest(driverNumber));
     }
 
     @Override

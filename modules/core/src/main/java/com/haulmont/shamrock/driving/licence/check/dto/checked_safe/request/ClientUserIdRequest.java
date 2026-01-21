@@ -13,9 +13,9 @@ import java.util.UUID;
 public class ClientUserIdRequest {
 
     @JsonProperty("clientUserId")
-    public final UUID clientUserId;
+    public final String clientUserId;
 
-    public ClientUserIdRequest(UUID clientUserId) {
+    public ClientUserIdRequest(String clientUserId) {
         this.clientUserId = clientUserId;
     }
 

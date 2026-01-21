@@ -39,17 +39,14 @@ public class DriverChangeConsumer {
             }
 
             var driver = driverUpdated.getData().getDriver();
-            String status;
-            if (driver.getStatus() != null) {
-                status = driver.getStatus().getCode();
-            } else {
-                status = driverRegistryService.loadDriver(driver.getId()).getStatus().getCode();
+            if (driver.getStatus() == null) {
+                driver = driverRegistryService.loadDriver(driver.getId());
             }
 
-            if (configurationService.getInactiveStatuses().contains(status)) {
-                licenceCheckService.updateClientStatus(driver.getId(), ClientStatus.INACTIVE);
+            if (configurationService.getInactiveStatuses().contains(driver.getStatus().getCode())) {
+                licenceCheckService.updateClientStatus(driver.getNumber(), ClientStatus.INACTIVE);
             } else {
-                licenceCheckService.updateClientStatus(driver.getId(), ClientStatus.ACTIVE);
+                licenceCheckService.updateClientStatus(driver.getNumber(), ClientStatus.ACTIVE);
             }
         } catch (Throwable t) {
             log.error("Error while processing DriverUpdated", t);

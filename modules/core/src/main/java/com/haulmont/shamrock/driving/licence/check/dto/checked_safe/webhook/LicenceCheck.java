@@ -23,7 +23,7 @@ public class LicenceCheck {
     @JsonProperty("numberOfPoints")
     private Integer numberOfPoints;
     @JsonProperty("clientUserId")
-    private UUID clientUserId;
+    private String clientUserId;
     @JsonProperty("riskScore")
     private RiskScore riskScore;
     @JsonProperty("riskScoreReasons")
@@ -49,7 +49,7 @@ public class LicenceCheck {
         return numberOfPoints;
     }
 
-    public UUID getClientUserId() {
+    public String getClientUserId() {
         return clientUserId;
     }
 

@@ -14,12 +14,12 @@ import java.util.UUID;
 public class UpdateUserStatusRequest {
 
     @JsonProperty("clientUserId")
-    private final UUID clientUserId;
+    private final String clientUserId;
     @JsonProperty("newStatus")
     private final ClientStatus newStatus;
 
 
-    public UpdateUserStatusRequest(UUID clientUserId, ClientStatus newStatus) {
+    public UpdateUserStatusRequest(String clientUserId, ClientStatus newStatus) {
         this.clientUserId = clientUserId;
         this.newStatus = newStatus;
     }

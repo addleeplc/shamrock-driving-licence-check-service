@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public class CheckedSafeWebhookEventRequest {
     @JsonProperty("clientUserId")
-    private UUID clientUserId;
+    private String clientUserId;
 
     @JsonProperty("event")
     private EventType eventType;
@@ -34,10 +34,6 @@ public class CheckedSafeWebhookEventRequest {
         return licenceCheck;
     }
 
-    public void setLicenceCheck(LicenceCheck licenceCheck) {
-        this.licenceCheck = licenceCheck;
-    }
-
     public StatusCode getStatus() {
         return statusCode;
     }
@@ -50,23 +46,8 @@ public class CheckedSafeWebhookEventRequest {
         return eventType;
     }
 
-    public void setEventType(EventType eventType) {
-        this.eventType = eventType;
-    }
-
-    public StatusCode getResponseStatus() {
-        return statusCode;
-    }
-
-    public void setResponseStatus(StatusCode statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public UUID getClientUserId() {
+    public String getClientUserId() {
         return clientUserId;
     }
 
-    public void setClientUserId(UUID clientUserId) {
-        this.clientUserId = clientUserId;
-    }
 }

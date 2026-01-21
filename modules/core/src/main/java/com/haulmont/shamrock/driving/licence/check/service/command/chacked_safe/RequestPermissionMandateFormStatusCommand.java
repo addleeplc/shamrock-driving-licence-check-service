@@ -10,15 +10,13 @@ import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.Clie
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.PermissionMandateFormStatusResponse;
 import kong.unirest.HttpRequest;
 
-import java.util.UUID;
-
 public class RequestPermissionMandateFormStatusCommand extends CheckedSafeCommand<PermissionMandateFormStatusResponse> {
 
-    private final UUID driverId;
+    private final String driverNumber;
 
-    public RequestPermissionMandateFormStatusCommand(UUID driverId) {
+    public RequestPermissionMandateFormStatusCommand(String driverNumber) {
         super(PermissionMandateFormStatusResponse.class);
-        this.driverId = driverId;
+        this.driverNumber = driverNumber;
     }
 
     @Override
@@ -26,7 +24,7 @@ public class RequestPermissionMandateFormStatusCommand extends CheckedSafeComman
         return post(url, path)
                 .header("Content-Type", "application/json")
                 .header(TOKEN_HEADER, token)
-                .body(new ClientUserIdRequest(driverId));
+                .body(new ClientUserIdRequest(driverNumber));
     }
 
     @Override

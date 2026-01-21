@@ -10,15 +10,13 @@ import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.request.Clie
 import com.haulmont.shamrock.driving.licence.check.dto.checked_safe.response.CheckedSafeResponse;
 import kong.unirest.HttpRequest;
 
-import java.util.UUID;
-
 public class TriggerAdHocCheckCommand extends CheckedSafeCommand<CheckedSafeResponse> {
 
-    private final UUID driverId;
+    private final String driverNumber;
 
-    public TriggerAdHocCheckCommand(UUID driverId) {
+    public TriggerAdHocCheckCommand(String driverNumber) {
         super(CheckedSafeResponse.class);
-        this.driverId = driverId;
+        this.driverNumber = driverNumber;
     }
 
     @Override
@@ -26,7 +24,7 @@ public class TriggerAdHocCheckCommand extends CheckedSafeCommand<CheckedSafeResp
         return post(url, path)
                 .header("Content-Type", "application/json")
                 .header(TOKEN_HEADER, token)
-                .body(new ClientUserIdRequest(driverId));
+                .body(new ClientUserIdRequest(driverNumber));
     }
 
     @Override

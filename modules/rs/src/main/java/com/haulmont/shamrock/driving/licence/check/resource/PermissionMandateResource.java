@@ -40,11 +40,7 @@ public class PermissionMandateResource {
             driver = driverRegistryService.loadDriver(driverId);
         }
 
-        return new GeneratePermissionMandateFormResponse(licenceCheckService.requestMandateForm(
-                driverId,
-                driver,
-                request.getCheckSettings()
-        ));
+        return new GeneratePermissionMandateFormResponse(licenceCheckService.requestMandateForm(driver, request.getCheckSettings()));
     }
 
     @GET

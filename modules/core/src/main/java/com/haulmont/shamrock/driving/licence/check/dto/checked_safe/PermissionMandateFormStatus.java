@@ -25,7 +25,7 @@ public class PermissionMandateFormStatus {
     @JsonDeserialize(using = CheckedSafeDateTimeAdapter.Deserializer.class)
     private DateTime expiresOn;
     @JsonProperty("clientUserId")
-    private UUID clientUserId;
+    private String clientUserId;
     @JsonProperty("mandateFormCompleted")
     private Boolean mandateFormCompleted;
 
@@ -41,7 +41,7 @@ public class PermissionMandateFormStatus {
         return expiresOn;
     }
 
-    public UUID getClientUserId() {
+    public String getClientUserId() {
         return clientUserId;
     }
 
