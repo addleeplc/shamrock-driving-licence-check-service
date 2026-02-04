@@ -64,13 +64,15 @@ public class EventConverter {
 
     public static Conviction convert(com.haulmont.shamrock.driving.licence.check.dto.checked_safe.webhook.Conviction origin) {
         Conviction conviction =  new Conviction();
-//
+
         if (origin.getConvictionDate() == null || origin.getCode() == null) {
             return null;
         }
 
         conviction.setConvictionDate(origin.getConvictionDate().toDateTimeAtStartOfDay());
-        conviction.setOffenceDate(origin.getOffenceDate().toDateTimeAtStartOfDay());
+        if (origin.getOffenceDate() != null) {
+            conviction.setOffenceDate(origin.getOffenceDate().toDateTimeAtStartOfDay());
+        }
         conviction.setCode(origin.getCode());
         conviction.setPoints(origin.getPoints());
         conviction.setDescription(origin.getCodeDescription());
